@@ -12,7 +12,7 @@ class BOSSONLY_API UPlayerInputComponent : public UEnhancedInputComponent
 {
 	GENERATED_BODY()
 public:
-	template<typename UserObject, typename CallbackFunc>
+	template<class UserObject, typename CallbackFunc>
 	void BindNativeInputAction(const UDataAsset_InputConfig* InInputConfig, const FGameplayTag& InInputTag, ETriggerEvent TriggerEvent, UserObject* ContextObject, CallbackFunc Func);
 };
 

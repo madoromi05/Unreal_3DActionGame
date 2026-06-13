@@ -43,19 +43,52 @@ APlayerCharacter::APlayerCharacter()
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	checkf(InputConfigDataAsset, TEXT("Forgot to assign a valid data asset as input config"));
+	if (!InputConfigDataAsset)
+	{
+		Debug::Print(TEXT("[Input] ERROR: InputConfigDataAsset is NULL! Blueprint‚ÅÝ’è‚µ‚Ä‚­‚¾‚³‚¢"), FColor::Red, 1);
+		checkf(false, TEXT("Forgot to assign a valid data asset as input config"));
+		return;
+	}
+
+	if (!InputConfigDataAsset->DefaultMappingContext)
+	{
+		Debug::Print(TEXT("[Input] ERROR: DefaultMappingContext is NULL!"), FColor::Red, 2);
+	}
+	else
+	{
+		Debug::Print(TEXT("[Input] MappingContext: OK"), FColor::Green, 2);
+	}
 
 	ULocalPlayer* localPlayer = GetController<APlayerController>()->GetLocalPlayer();
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(localPlayer);
 
-	check(Subsystem);
+	if (!Subsystem)
+	{
+		Debug::Print(TEXT("[Input] ERROR: EnhancedInputSubsystem is NULL!"), FColor::Red, 3);
+		check(false);
+		return;
+	}
 
 	Subsystem->AddMappingContext(InputConfigDataAsset->DefaultMappingContext, 0);
 
 	UPlayerInputComponent* playerInputComponent = CastChecked<UPlayerInputComponent>(PlayerInputComponent);
 
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, GamePlayTags::InputTag_Move, ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, GamePlayTags::InputTag_Look, ETriggerEvent::Triggered, this, &ThisClass::Input_Look);
+	// Debug::Print(FString::Printf(TEXT("[Input] NativeInputActions count: %d"), InputConfigDataAsset->NativeInputActions.Num()), FColor::Yellow, 4);
+	for (int32 i = 0; i < InputConfigDataAsset->NativeInputActions.Num(); i++)
+	{
+		const auto& Entry = InputConfigDataAsset->NativeInputActions[i];
+		Debug::Print(FString::Printf(TEXT("[Input] Action[%d] Tag=%s, Action=%s"),
+			i,
+			*Entry.InputTag.ToString(),
+			Entry.InputAction ? *Entry.InputAction->GetName() : TEXT("NULL")),
+			FColor::Yellow, 10 + i);
+	}
+
+	const FGameplayTag MoveTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Move"));
+	const FGameplayTag LookTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Look"));
+	
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, MoveTag, ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, LookTag, ETriggerEvent::Triggered, this, &ThisClass::Input_Look);
 }
 
 void APlayerCharacter::BeginPlay()
@@ -74,14 +107,12 @@ void APlayerCharacter::Input_Move(const FInputActionValue& InputActionValue)
 	if (MovementVector.Y != 0.f)
 	{
 		const FVector ForwardDirection = MovementRotation.RotateVector(FVector::ForwardVector);
-
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 	}
 
 	if (MovementVector.X != 0.f)
 	{
 		const FVector RightDirection = MovementRotation.RotateVector(FVector::RightVector);
-
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
@@ -97,6 +128,6 @@ void APlayerCharacter::Input_Look(const FInputActionValue& InputActionValue)
 
 	if (LookAxisVector.Y != 0.f)
 	{
-		AddControllerPitchInput(LookAxisVector.Y);
+		AddControllerPitchInput(-LookAxisVector.Y);
 	}
 }
