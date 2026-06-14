@@ -6,8 +6,22 @@
 #include "EnhancedInputSubsystems.h"
 #include "DataAssets/Input/DataAsset_InputConfig.h"
 #include "Components/Input/PlayerInputComponent.h"
+#include "AbilitySystem/GameAbilitySystemComponent.h"
 #include "GamePlayerTag.h"
 #include "DebugHelper.h"
+
+void APlayerCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (WarriorAbilitySystemComponent && WarriorAttributeSet)
+	{
+		const FString ASCText = FString::Printf(TEXT("Owner Actor: %s, AvatarActor: %s"), *WarriorAbilitySystemComponent->GetOwnerActor()->GetActorLabel(), *WarriorAbilitySystemComponent->GetAvatarActor()->GetActorLabel());
+
+		Debug::Print(TEXT("Ability system component valid. ") + ASCText, FColor::Green);
+		Debug::Print(TEXT("AttributeSet valid. ") + ASCText, FColor::Green);
+	}
+}
 
 //Cameraの位置と動き
 APlayerCharacter::APlayerCharacter()
@@ -129,8 +143,10 @@ void APlayerCharacter::Input_Look(const FInputActionValue& InputActionValue)
 	}
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void APlayerCharacter::Input_DashStart(const FInputActionValue& InputActionValue)
 {
+	if (!bCanDash) return;
 	bIsDashing = true;
 	GetCharacterMovement()->MaxWalkSpeed = DashSpeed;
 	Debug::Print(TEXT("DashStart"), FColor::Green, 20);
