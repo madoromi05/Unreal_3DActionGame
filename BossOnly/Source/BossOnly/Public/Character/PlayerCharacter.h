@@ -18,6 +18,7 @@ class BOSSONLY_API APlayerCharacter : public ACharacterBase
 
 public:
 	APlayerCharacter();
+	FORCEINLINE bool GetIsDashing() const { return bIsDashing; }
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -42,6 +43,28 @@ private:
 
 	void Input_Move(const FInputActionValue& InputActionValue);
 	void Input_Look(const FInputActionValue& InputActionValue);
+	void Input_DashStart(const FInputActionValue& InputActionValue);
+	void Input_DashEnd(const FInputActionValue& InputActionValue);
+#pragma endregion
 
+// ダッシュ関連の変数公開
+#pragma region Dash
+	UPROPERTY(EditDefaultsOnly, Category = "Dash")
+	float DashSpeed = 1200.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Dash")
+	float DashDuration = 0.2f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Dash")
+	float DashCooldown = 1.0f;
+
+	bool bIsDashing = false;
+	bool bCanDash = true;
+
+	FTimerHandle DashTimerHandle;
+	FTimerHandle DashCooldownTimerHandle;
+
+	void OnDashEnd();
+	void OnDashCooldownEnd();
 #pragma endregion
 };

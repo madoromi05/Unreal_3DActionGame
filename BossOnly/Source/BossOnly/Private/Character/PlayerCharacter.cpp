@@ -52,10 +52,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	{
 		Debug::Print(TEXT("[Input] ERROR: DefaultMappingContext is NULL!"), FColor::Red, 2);
 	}
-	else
-	{
-		Debug::Print(TEXT("[Input] MappingContext: OK"), FColor::Green, 2);
-	}
 
 	ULocalPlayer* localPlayer = GetController<APlayerController>()->GetLocalPlayer();
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(localPlayer);
@@ -84,9 +80,12 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	const FGameplayTag MoveTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Move"));
 	const FGameplayTag LookTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Look"));
-	
+	const FGameplayTag DashTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Dash"));
+
 	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, MoveTag, ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
 	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, LookTag, ETriggerEvent::Triggered, this, &ThisClass::Input_Look);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, DashTag, ETriggerEvent::Started, this, &ThisClass::Input_DashStart);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, DashTag, ETriggerEvent::Completed, this, &ThisClass::Input_DashEnd);
 }
 
 void APlayerCharacter::BeginPlay()
@@ -128,4 +127,31 @@ void APlayerCharacter::Input_Look(const FInputActionValue& InputActionValue)
 	{
 		AddControllerPitchInput(-LookAxisVector.Y);
 	}
+}
+
+void APlayerCharacter::Input_DashStart(const FInputActionValue& InputActionValue)
+{
+	bIsDashing = true;
+	GetCharacterMovement()->MaxWalkSpeed = DashSpeed;
+	Debug::Print(TEXT("DashStart"), FColor::Green, 20);
+}
+
+void APlayerCharacter::Input_DashEnd(const FInputActionValue& InputActionValue)
+{
+	bIsDashing = false;
+	GetCharacterMovement()->MaxWalkSpeed = 400.f;
+	Debug::Print(TEXT("DashEnd"), FColor::Red, 21);
+}
+
+void APlayerCharacter::OnDashEnd()
+{
+	bIsDashing = false;
+	GetCharacterMovement()->MaxWalkSpeed = 400.f;
+
+	GetWorldTimerManager().SetTimer(DashCooldownTimerHandle, this, &ThisClass::OnDashCooldownEnd, DashCooldown, false);
+}
+
+void APlayerCharacter::OnDashCooldownEnd()
+{
+	bCanDash = true;
 }
