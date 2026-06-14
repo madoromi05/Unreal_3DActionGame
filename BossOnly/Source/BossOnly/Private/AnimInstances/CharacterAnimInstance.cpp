@@ -22,4 +22,7 @@ void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 	GroundSpeed = OwningCharacter->GetVelocity().Size2D();
 
 	bHasAcceleration = OwningMovementComponent->GetCurrentAcceleration().SizeSquared2D() > 0.f;
+
+	bIsInAir = OwningMovementComponent->IsFalling();
+	VerticalVelocity = OwningCharacter->GetVelocity().Z;
 }

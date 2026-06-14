@@ -36,7 +36,7 @@ APlayerCharacter::APlayerCharacter()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetRootComponent());
 
-	CameraBoom->TargetArmLength = 250.f;					// キャラクターからカメラまでの基本距離
+	CameraBoom->TargetArmLength = 350.f;					// キャラクターからカメラまでの基本距離
 	CameraBoom->SocketOffset = FVector(0.f, 0.f, 90.f);		// カメラの基準点のオフセット
 	CameraBoom->bUsePawnControlRotation = true;				// コントローラーの回転に合わせてカメラも回転させる
 
@@ -95,18 +95,13 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	const FGameplayTag MoveTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Move"));
 	const FGameplayTag LookTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Look"));
 	const FGameplayTag DashTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Dash"));
+	const FGameplayTag JumpTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Jump"));
 
 	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, MoveTag, ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
 	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, LookTag, ETriggerEvent::Triggered, this, &ThisClass::Input_Look);
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, DashTag, ETriggerEvent::Started, this, &ThisClass::Input_DashStart);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, DashTag, ETriggerEvent::Started,   this, &ThisClass::Input_DashStart);
 	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, DashTag, ETriggerEvent::Completed, this, &ThisClass::Input_DashEnd);
-}
-
-void APlayerCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	Debug::Print(TEXT("Working"));
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, JumpTag, ETriggerEvent::Started,   this, &ThisClass::Input_Jump);
 }
 
 void APlayerCharacter::Input_Move(const FInputActionValue& InputActionValue)
@@ -146,17 +141,28 @@ void APlayerCharacter::Input_Look(const FInputActionValue& InputActionValue)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void APlayerCharacter::Input_DashStart(const FInputActionValue& InputActionValue)
 {
-	if (!bCanDash) return;
+	Debug::Print(TEXT("[Dash] Input_DashStart called"), FColor::Cyan, 20);
+	if (!bCanDash)
+	{
+		Debug::Print(TEXT("[Dash] Cannot dash (cooldown)"), FColor::Orange, 22);
+		return;
+	}
 	bIsDashing = true;
 	GetCharacterMovement()->MaxWalkSpeed = DashSpeed;
-	Debug::Print(TEXT("DashStart"), FColor::Green, 20);
+	Debug::Print(TEXT("[Dash] DashStart - speed set"), FColor::Green, 20);
 }
 
 void APlayerCharacter::Input_DashEnd(const FInputActionValue& InputActionValue)
 {
 	bIsDashing = false;
+	bJustDashed = true;
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
-	Debug::Print(TEXT("DashEnd"), FColor::Red, 21);
+	Debug::Print(TEXT("[Dash] DashEnd"), FColor::Red, 21);
+
+	GetWorldTimerManager().SetTimer(DashJumpBlockTimerHandle, [this]()
+	{
+		bJustDashed = false;
+	}, 0.1f, false);
 }
 
 void APlayerCharacter::OnDashEnd()
@@ -170,4 +176,28 @@ void APlayerCharacter::OnDashEnd()
 void APlayerCharacter::OnDashCooldownEnd()
 {
 	bCanDash = true;
+}
+
+void APlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+
+	EMovementMode CurrentMode = GetCharacterMovement()->MovementMode;
+	if (CurrentMode == MOVE_Falling && PrevMovementMode == MOVE_Walking)
+	{
+		Debug::Print(FString::Printf(TEXT("[Movement] Walking -> Falling! bIsDashing=%s, bPressedJump=%s"),
+			bIsDashing ? TEXT("true") : TEXT("false"),
+			bPressedJump ? TEXT("true") : TEXT("false")),
+			FColor::Magenta, 25);
+	}
+}
+
+void APlayerCharacter::Input_Jump(const FInputActionValue& InputActionValue)
+{
+	if (bJustDashed)
+	{
+		Debug::Print(TEXT("[Jump] Blocked - just dashed"), FColor::Orange, 23);
+		return;
+	}
+	Jump();
 }

@@ -7,6 +7,7 @@ public class BossOnly : ModuleRules
 	public BossOnly(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		bUseUnity = false;
 	
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",

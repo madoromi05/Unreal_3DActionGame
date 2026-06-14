@@ -23,7 +23,7 @@ public:
 protected:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	virtual void BeginPlay() override;
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
 
 private:
 
@@ -46,9 +46,10 @@ private:
 	void Input_Look(const FInputActionValue& InputActionValue);
 	void Input_DashStart(const FInputActionValue& InputActionValue);
 	void Input_DashEnd(const FInputActionValue& InputActionValue);
+	void Input_Jump(const FInputActionValue& InputActionValue);
 #pragma endregion
 
-// ƒ_ƒbƒVƒ…ŠÖ˜A‚Ì•Ï”ŒöŠJ
+// ---------------------------------------ï¿½_ï¿½bï¿½Vï¿½ï¿½ï¿½Ö˜Aï¿½Ì•Ïï¿½ï¿½ï¿½ï¿½J---------------------------------------
 #pragma region Dash
 	UPROPERTY(EditDefaultsOnly, Category = "Dash")
 	float DashSpeed = 1200.f;
@@ -61,9 +62,11 @@ private:
 
 	bool bIsDashing = false;
 	bool bCanDash = true;
+	bool bJustDashed = false;
 
 	FTimerHandle DashTimerHandle;
 	FTimerHandle DashCooldownTimerHandle;
+	FTimerHandle DashJumpBlockTimerHandle;
 
 	void OnDashEnd();
 	void OnDashCooldownEnd();
