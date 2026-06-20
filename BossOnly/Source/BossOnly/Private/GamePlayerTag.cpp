@@ -7,4 +7,5 @@ namespace GamePlayTags
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Look, "InputTag.Look")
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Dash, "InputTag.Dash")
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Jump, "InputTag.Jump")
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack, "InputTag.Attack")
 }

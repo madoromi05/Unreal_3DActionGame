@@ -47,6 +47,7 @@ private:
 	void Input_DashStart(const FInputActionValue& InputActionValue);
 	void Input_DashEnd(const FInputActionValue& InputActionValue);
 	void Input_Jump(const FInputActionValue& InputActionValue);
+	void Input_Attack(const FInputActionValue& InputActionValue);
 #pragma endregion
 
 // ---------------------------------------�_�b�V���֘A�̕ϐ����J---------------------------------------

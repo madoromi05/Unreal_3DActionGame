@@ -92,16 +92,18 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 			FColor::Yellow, 10 + i);
 	}
 
-	const FGameplayTag MoveTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Move"));
-	const FGameplayTag LookTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Look"));
-	const FGameplayTag DashTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Dash"));
-	const FGameplayTag JumpTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Jump"));
+	const FGameplayTag MoveTag   = FGameplayTag::RequestGameplayTag(FName("InputTag.Move"));
+	const FGameplayTag LookTag   = FGameplayTag::RequestGameplayTag(FName("InputTag.Look"));
+	const FGameplayTag DashTag   = FGameplayTag::RequestGameplayTag(FName("InputTag.Dash"));
+	const FGameplayTag JumpTag   = FGameplayTag::RequestGameplayTag(FName("InputTag.Jump"));
+	const FGameplayTag AttackTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Attack"));
 
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, MoveTag, ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, LookTag, ETriggerEvent::Triggered, this, &ThisClass::Input_Look);
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, DashTag, ETriggerEvent::Started,   this, &ThisClass::Input_DashStart);
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, DashTag, ETriggerEvent::Completed, this, &ThisClass::Input_DashEnd);
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, JumpTag, ETriggerEvent::Started,   this, &ThisClass::Input_Jump);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, MoveTag,   ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, LookTag,   ETriggerEvent::Triggered, this, &ThisClass::Input_Look);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, DashTag,   ETriggerEvent::Started,   this, &ThisClass::Input_DashStart);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, DashTag,   ETriggerEvent::Completed, this, &ThisClass::Input_DashEnd);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, JumpTag,   ETriggerEvent::Started,   this, &ThisClass::Input_Jump);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, AttackTag, ETriggerEvent::Started,   this, &ThisClass::Input_Attack);
 }
 
 void APlayerCharacter::Input_Move(const FInputActionValue& InputActionValue)
@@ -138,18 +140,10 @@ void APlayerCharacter::Input_Look(const FInputActionValue& InputActionValue)
 	}
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void APlayerCharacter::Input_DashStart(const FInputActionValue& InputActionValue)
 {
-	Debug::Print(TEXT("[Dash] Input_DashStart called"), FColor::Cyan, 20);
-	if (!bCanDash)
-	{
-		Debug::Print(TEXT("[Dash] Cannot dash (cooldown)"), FColor::Orange, 22);
-		return;
-	}
 	bIsDashing = true;
 	GetCharacterMovement()->MaxWalkSpeed = DashSpeed;
-	Debug::Print(TEXT("[Dash] DashStart - speed set"), FColor::Green, 20);
 }
 
 void APlayerCharacter::Input_DashEnd(const FInputActionValue& InputActionValue)
@@ -157,7 +151,6 @@ void APlayerCharacter::Input_DashEnd(const FInputActionValue& InputActionValue)
 	bIsDashing = false;
 	bJustDashed = true;
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
-	Debug::Print(TEXT("[Dash] DashEnd"), FColor::Red, 21);
 
 	GetWorldTimerManager().SetTimer(DashJumpBlockTimerHandle, [this]()
 	{
@@ -183,21 +176,18 @@ void APlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uin
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
 
 	EMovementMode CurrentMode = GetCharacterMovement()->MovementMode;
-	if (CurrentMode == MOVE_Falling && PrevMovementMode == MOVE_Walking)
-	{
-		Debug::Print(FString::Printf(TEXT("[Movement] Walking -> Falling! bIsDashing=%s, bPressedJump=%s"),
-			bIsDashing ? TEXT("true") : TEXT("false"),
-			bPressedJump ? TEXT("true") : TEXT("false")),
-			FColor::Magenta, 25);
-	}
 }
 
 void APlayerCharacter::Input_Jump(const FInputActionValue& InputActionValue)
 {
-	if (bJustDashed)
-	{
-		Debug::Print(TEXT("[Jump] Blocked - just dashed"), FColor::Orange, 23);
-		return;
-	}
 	Jump();
+}
+
+void APlayerCharacter::Input_Attack(const FInputActionValue& InputActionValue)
+{
+	if (!WarriorAbilitySystemComponent) return;
+
+	FGameplayTagContainer AttackTags;
+	AttackTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Player.Ability.Attack.Light")));
+	WarriorAbilitySystemComponent->TryActivateAbilitiesByTag(AttackTags);
 }

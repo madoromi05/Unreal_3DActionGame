@@ -16,7 +16,8 @@ public class BossOnly : ModuleRules
 			"InputCore",
 			"EnhancedInput",
 			"GameplayTags",
-			"GameplayTasks"});
+			"GameplayTasks",
+			"GameplayAbilities"});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
