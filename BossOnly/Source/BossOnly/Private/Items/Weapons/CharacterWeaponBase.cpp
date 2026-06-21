@@ -18,6 +18,11 @@ ACharacterWeaponBase::ACharacterWeaponBase()
 	WeaponCollisionBox->OnComponentBeginOverlap.AddDynamic(this, &ACharacterWeaponBase::OnCollisionOverlap);
 }
 
+void ACharacterWeaponBase::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
 void ACharacterWeaponBase::EnableCollision()
 {
 	HitActorsThisSwing.Empty();
