@@ -50,26 +50,16 @@ private:
 	void Input_Attack(const FInputActionValue& InputActionValue);
 #pragma endregion
 
-// ---------------------------------------�_�b�V���֘A�̕ϐ����J---------------------------------------
-#pragma region Dash
-	UPROPERTY(EditDefaultsOnly, Category = "Dash")
+// --------------------------------------- 移動・ダッシュ関連 ---------------------------------------
+#pragma region Movement
+	// 通常時の最大移動速度（ダッシュ解除時に戻す値）
+	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	float NormalWalkSpeed = 400.f;
+
+	// ダッシュ（押しっぱなしで加速）中の最大移動速度
+	UPROPERTY(EditDefaultsOnly, Category = "Movement")
 	float DashSpeed = 1200.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Dash")
-	float DashDuration = 0.2f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Dash")
-	float DashCooldown = 1.0f;
-
 	bool bIsDashing = false;
-	bool bCanDash = true;
-	bool bJustDashed = false;
-
-	FTimerHandle DashTimerHandle;
-	FTimerHandle DashCooldownTimerHandle;
-	FTimerHandle DashJumpBlockTimerHandle;
-
-	void OnDashEnd();
-	void OnDashCooldownEnd();
 #pragma endregion
 };

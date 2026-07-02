@@ -49,7 +49,7 @@ APlayerCharacter::APlayerCharacter()
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;			// キャラクターが移動する方向に向かって自動的に回転するか
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f);	// キャラクターの回転速度
-	GetCharacterMovement()->MaxWalkSpeed = 400.f;			 			// キャラクターの移動速度
+	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;	 			// キャラクターの移動速度
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;		// キャラクターの減速率
 }
 
@@ -92,18 +92,12 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 			FColor::Yellow, 10 + i);
 	}
 
-	const FGameplayTag MoveTag   = FGameplayTag::RequestGameplayTag(FName("InputTag.Move"));
-	const FGameplayTag LookTag   = FGameplayTag::RequestGameplayTag(FName("InputTag.Look"));
-	const FGameplayTag DashTag   = FGameplayTag::RequestGameplayTag(FName("InputTag.Dash"));
-	const FGameplayTag JumpTag   = FGameplayTag::RequestGameplayTag(FName("InputTag.Jump"));
-	const FGameplayTag AttackTag = FGameplayTag::RequestGameplayTag(FName("InputTag.Attack"));
-
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, MoveTag,   ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, LookTag,   ETriggerEvent::Triggered, this, &ThisClass::Input_Look);
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, DashTag,   ETriggerEvent::Started,   this, &ThisClass::Input_DashStart);
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, DashTag,   ETriggerEvent::Completed, this, &ThisClass::Input_DashEnd);
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, JumpTag,   ETriggerEvent::Started,   this, &ThisClass::Input_Jump);
-	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, AttackTag, ETriggerEvent::Started,   this, &ThisClass::Input_Attack);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, GamePlayTags::InputTag_Move,   ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, GamePlayTags::InputTag_Look,   ETriggerEvent::Triggered, this, &ThisClass::Input_Look);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, GamePlayTags::InputTag_Dash,   ETriggerEvent::Started,   this, &ThisClass::Input_DashStart);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, GamePlayTags::InputTag_Dash,   ETriggerEvent::Completed, this, &ThisClass::Input_DashEnd);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, GamePlayTags::InputTag_Jump,   ETriggerEvent::Started,   this, &ThisClass::Input_Jump);
+	playerInputComponent->BindNativeInputAction(InputConfigDataAsset, GamePlayTags::InputTag_Attack, ETriggerEvent::Started,   this, &ThisClass::Input_Attack);
 }
 
 void APlayerCharacter::Input_Move(const FInputActionValue& InputActionValue)
@@ -149,33 +143,12 @@ void APlayerCharacter::Input_DashStart(const FInputActionValue& InputActionValue
 void APlayerCharacter::Input_DashEnd(const FInputActionValue& InputActionValue)
 {
 	bIsDashing = false;
-	bJustDashed = true;
-	GetCharacterMovement()->MaxWalkSpeed = 400.f;
-
-	GetWorldTimerManager().SetTimer(DashJumpBlockTimerHandle, [this]()
-	{
-		bJustDashed = false;
-	}, 0.1f, false);
-}
-
-void APlayerCharacter::OnDashEnd()
-{
-	bIsDashing = false;
-	GetCharacterMovement()->MaxWalkSpeed = 400.f;
-
-	GetWorldTimerManager().SetTimer(DashCooldownTimerHandle, this, &ThisClass::OnDashCooldownEnd, DashCooldown, false);
-}
-
-void APlayerCharacter::OnDashCooldownEnd()
-{
-	bCanDash = true;
+	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 }
 
 void APlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
-
-	EMovementMode CurrentMode = GetCharacterMovement()->MovementMode;
 }
 
 void APlayerCharacter::Input_Jump(const FInputActionValue& InputActionValue)
@@ -188,6 +161,6 @@ void APlayerCharacter::Input_Attack(const FInputActionValue& InputActionValue)
 	if (!WarriorAbilitySystemComponent) return;
 
 	FGameplayTagContainer AttackTags;
-	AttackTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Player.Ability.Attack.Light")));
+	AttackTags.AddTag(GamePlayTags::Player_Ability_Attack_Light);
 	WarriorAbilitySystemComponent->TryActivateAbilitiesByTag(AttackTags);
 }
