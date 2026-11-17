@@ -2,6 +2,8 @@
 #include "AbilitySystem/GameAbilitySystemComponent.h"
 #include "AbilitySystem/GameAttributeSet.h"
 #include "Items/Weapons/CharacterWeaponBase.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 ACharacterBase::ACharacterBase()
 {
@@ -19,9 +21,21 @@ UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 	return GetGameAbilitySystemComponent();
 }
 
+IMeleeWeaponInterface* ACharacterBase::GetActiveMeleeWeapon() const
+{
+	return Cast<IMeleeWeaponInterface>(EquippedWeapon);
+}
+
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	InitializeDefaultAttributes();
+
+	if (WarriorAttributeSet)
+	{
+		WarriorAttributeSet->OnHealthZero.AddUObject(this, &ACharacterBase::HandleDeath);
+	}
 
 	if (WeaponClass)
 	{
@@ -38,6 +52,31 @@ void ACharacterBase::BeginPlay()
 				true);
 			EquippedWeapon->AttachToComponent(GetMesh(), AttachRules, WeaponSocketName);
 		}
+	}
+}
+
+void ACharacterBase::InitializeDefaultAttributes()
+{
+	if (!WarriorAttributeSet) return;
+
+	WarriorAttributeSet->InitMaxHealth(InitialMaxHealth);
+	WarriorAttributeSet->InitHealth(InitialMaxHealth);
+	WarriorAttributeSet->InitAttackPower(InitialAttackPower);
+	WarriorAttributeSet->InitMaxStamina(InitialMaxStamina);
+	WarriorAttributeSet->InitStamina(InitialMaxStamina);
+}
+
+void ACharacterBase::HandleDeath()
+{
+	if (bIsDead) return;
+	bIsDead = true;
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->DisableMovement();
+
+	if (WarriorAbilitySystemComponent)
+	{
+		WarriorAbilitySystemComponent->CancelAllAbilities();
 	}
 }
 

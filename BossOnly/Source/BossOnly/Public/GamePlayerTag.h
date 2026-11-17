@@ -14,4 +14,8 @@ namespace GamePlayTags
 
 	// Abilities
 	BOSSONLY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Ability_Attack_Light)
+	BOSSONLY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enemy_Ability_Attack_Melee)
+
+	// GameplayEffect の SetByCaller で使うデータタグ
+	BOSSONLY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_Damage)
 };

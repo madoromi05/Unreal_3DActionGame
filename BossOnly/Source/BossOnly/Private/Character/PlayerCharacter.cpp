@@ -7,6 +7,7 @@
 #include "DataAssets/Input/DataAsset_InputConfig.h"
 #include "Components/Input/PlayerInputComponent.h"
 #include "AbilitySystem/GameAbilitySystemComponent.h"
+#include "AbilitySystem/Abilities/GA_PlayerAttack.h"
 #include "GamePlayerTag.h"
 #include "DebugHelper.h"
 
@@ -51,6 +52,10 @@ APlayerCharacter::APlayerCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f);	// キャラクターの回転速度
 	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;	 			// キャラクターの移動速度
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;		// キャラクターの減速率
+
+	// BP 側で StartupAbilities が未設定（空配列のまま）なら、この既定値が使われる。
+	// 既に BP_PlayerCharacter で明示的に上書きされている場合はそちらが優先される。
+	StartupAbilities.Add(UGA_PlayerAttack::StaticClass());
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

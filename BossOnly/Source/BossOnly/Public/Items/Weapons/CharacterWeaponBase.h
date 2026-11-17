@@ -5,20 +5,20 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
+#include "Items/Weapons/MeleeWeaponInterface.h"
 #include "CharacterWeaponBase.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWeaponHitSignature, AActor*, const FHitResult&);
-
 UCLASS()
-class BOSSONLY_API ACharacterWeaponBase : public AActor
+class BOSSONLY_API ACharacterWeaponBase : public AActor, public IMeleeWeaponInterface
 {
 	GENERATED_BODY()
 
 public:
 	ACharacterWeaponBase();
 
-	void EnableCollision();
-	void DisableCollision();
+	virtual void EnableCollision() override;
+	virtual void DisableCollision() override;
+	virtual FOnWeaponHitSignature& GetOnWeaponHit() override { return OnWeaponHit; }
 
 	FOnWeaponHitSignature OnWeaponHit;
 
